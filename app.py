@@ -186,6 +186,7 @@ class PaperMeta:
     authors: str
     year: int | str
     journal: str
+    volume_issue_pages: str
     doi: str
     subtopic: str
     confidence: str
@@ -218,12 +219,27 @@ def papers_by_filename(manifest: dict) -> dict[str, PaperMeta]:
             authors=p.get("authors", ""),
             year=p.get("year", ""),
             journal=p.get("journal", ""),
+            volume_issue_pages=p.get("volume_issue_pages", ""),
             doi=p.get("doi", ""),
             subtopic=p.get("subtopic", ""),
             confidence=p.get("confidence", ""),
             open_access=p.get("open_access", False),
         )
     return out
+
+
+def apa7_citation(filename: str, lookup: dict[str, PaperMeta]) -> str:
+    """Best-effort APA 7 citation built from manifest fields."""
+    meta = lookup.get(filename)
+    if not meta:
+        return f"{filename} (no citation metadata)"
+    journal_part = meta.journal
+    if meta.volume_issue_pages:
+        journal_part = f"{meta.journal}, {meta.volume_issue_pages}"
+    citation = f"{meta.authors} ({meta.year}). {meta.title}. {journal_part}."
+    if meta.doi:
+        citation += f" https://doi.org/{meta.doi}"
+    return citation
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -667,6 +683,8 @@ elif page == "Search":
                         """,
                         unsafe_allow_html=True,
                     )
+                    with st.expander(f"📋 Cite as APA 7 — Result {i}"):
+                        st.code(apa7_citation(md["source"], paper_lookup), language=None)
 
 
 # ──────────────────────────────────────────────────────────────────────
