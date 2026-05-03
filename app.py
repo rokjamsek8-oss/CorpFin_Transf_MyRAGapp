@@ -38,6 +38,13 @@ SUGGESTED_QUERIES = [
     "Which cybersecurity risks affect accounting information systems?",
 ]
 
+OOS_SIMILARITY_THRESHOLD = 0.35
+OOS_NOTICE = (
+    "**No strong matches in the corpus.** The library covers digital transformation "
+    "of the finance function — try a related question, or check the **Library** page "
+    "to see what's indexed."
+)
+
 PALETTE = {
     "navy": "#0B2545",
     "slate": "#1E3A5F",
@@ -556,6 +563,14 @@ elif page == "Search":
 
                 if not results:
                     st.warning("No results — try a different query or activate more sources.")
+
+                if results:
+                    max_similarity = max(
+                        (max(0.0, 1.0 - float(score)) for _, score in results),
+                        default=0.0,
+                    )
+                    if max_similarity < OOS_SIMILARITY_THRESHOLD:
+                        st.warning(OOS_NOTICE)
 
                 for i, (doc, distance) in enumerate(results, 1):
                     css_class, similarity = similarity_class(distance)
