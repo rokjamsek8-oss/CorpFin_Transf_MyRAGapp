@@ -352,12 +352,33 @@ class NumpyVectorStore:
         return results
 
 
-@st.cache_resource(show_spinner="Indexing PDF library...")
-def build_vector_store(_signature: str):
-    """Loads every PDF, splits into chunks, embeds, returns NumpyVectorStore + chunk dicts.
+EMBEDDINGS_PKL = Path("static/embeddings.pkl")
 
-    Re-runs only when the library signature changes (PDF added/removed/replaced).
+
+@st.cache_resource(show_spinner="Loading pre-computed index...")
+def build_vector_store(_signature: str):
+    """Loads the pre-computed embeddings pickle if present, else falls back to
+    indexing PDFs from scratch.
+
+    The pickle path is the only path used in deployed environments — it skips
+    PyPDF + text-splitting + batch embedding entirely, which is what fits the
+    Render free-tier 512 MB RAM cap. Rebuild via `python docs/build_embeddings.py`
+    whenever the library changes.
     """
+    if EMBEDDINGS_PKL.exists():
+        import pickle
+        with open(EMBEDDINGS_PKL, "rb") as f:
+            data = pickle.load(f)
+        store = NumpyVectorStore(
+            texts=data["texts"],
+            metadatas=data["metadatas"],
+            vectors=data["vectors"],
+            embedder=load_embedding_model(),
+        )
+        return store, data["chunk_records"], Counter(data["chunks_per_doc"])
+
+    # Fallback: build at runtime (for local dev when the pickle hasn't been
+    # generated yet). Heavier on RAM; only safe outside Render's free tier.
     from langchain_community.document_loaders import PyPDFLoader
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
