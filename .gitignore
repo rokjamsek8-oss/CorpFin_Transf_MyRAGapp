@@ -1,0 +1,22 @@
+# Course materials — local reference only
+docs/
+*.ipynb
+slides_*.html
+
+# Local-only personal checklist (PDFs come via FAMNIT, not committed paths)
+_DOWNLOAD_LIST.md
+
+# Standard Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.env
+.venv/
+venv/
+
+# Streamlit / local data
+.streamlit/secrets.toml
+chroma_db/
+chroma_data/

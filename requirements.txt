@@ -1,0 +1,10 @@
+streamlit>=1.30.0
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-huggingface>=0.0.3
+langchain-text-splitters>=0.2.0
+chromadb>=0.5.23,<0.6.0
+sentence-transformers>=2.2.2
+numpy>=1.24.0
+pandas>=2.0.0
+pypdf>=4.0.0
