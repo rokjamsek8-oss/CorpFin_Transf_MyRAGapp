@@ -334,6 +334,25 @@ HISTORY_LIMIT = 5
 HISTORY_LABEL_MAX = 40
 
 
+def apply_subtopic_filter() -> None:
+    """Selectbox callback: tick papers in the chosen sub-topic, untick the rest."""
+    selected = st.session_state.get("subtopic_filter", "All sub-topics")
+    current_pdfs = discover_pdfs()
+    if selected == "All sub-topics":
+        target = {p.name for p in current_pdfs}
+    else:
+        manifest = load_manifest()
+        target = {
+            paper["filename"]
+            for paper in manifest.get("papers", [])
+            if paper.get("subtopic") == selected
+        }
+    for p in current_pdfs:
+        on = p.name in target
+        st.session_state.active_sources[p.name] = on
+        st.session_state[f"src_{p.name}"] = on
+
+
 def add_to_history(query: str) -> None:
     """Prepend `query` to the session-only search history (dedup, cap at HISTORY_LIMIT)."""
     if not query or not query.strip():
@@ -421,6 +440,19 @@ for stale in list(st.session_state.active_sources):
         del st.session_state.active_sources[stale]
 
 if pdfs:
+    subtopic_options = sorted({
+        p.get("subtopic", "")
+        for p in manifest.get("papers", [])
+        if p.get("subtopic")
+    })
+    if subtopic_options:
+        st.sidebar.selectbox(
+            "Filter by sub-topic",
+            ["All sub-topics", *subtopic_options],
+            key="subtopic_filter",
+            on_change=apply_subtopic_filter,
+        )
+
     col_a, col_b = st.sidebar.columns(2)
     if col_a.button("All", use_container_width=True):
         for p in pdfs:
