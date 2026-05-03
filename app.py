@@ -157,6 +157,18 @@ h1, h2, h3 {{
     background: #FEF7E6;
     color: {PALETTE['charcoal']};
 }}
+
+.active-counter {{
+    display: inline-block;
+    background: {PALETTE['gold']};
+    color: {PALETTE['navy']} !important;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 6px 0 8px 0;
+    font-family: 'JetBrains Mono', monospace;
+}}
 </style>
 """
 
@@ -478,6 +490,12 @@ if pdfs:
             st.session_state[f"src_{p.name}"] = False
         st.session_state["subtopic_filter"] = "All sub-topics"
         st.session_state["journal_filter"] = "All journals"
+
+    n_active = sum(1 for v in st.session_state.active_sources.values() if v)
+    st.sidebar.markdown(
+        f"<div class='active-counter'>{n_active} of {len(pdfs)} active</div>",
+        unsafe_allow_html=True,
+    )
 
     for p in pdfs:
         meta = paper_lookup.get(p.name)
