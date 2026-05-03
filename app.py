@@ -535,7 +535,10 @@ elif page == "Search":
         )
 
         if not active:
-            st.warning("No sources are active. Tick at least one PDF in the sidebar.")
+            st.warning(
+                "No sources are active. Tick at least one PDF in the sidebar — "
+                "or use the **All** button at the top of the source list."
+            )
         else:
             if not st.session_state.get("search_query_input"):
                 st.caption("Try a suggestion:")
@@ -562,7 +565,10 @@ elif page == "Search":
                         )
 
                 if not results:
-                    st.warning("No results — try a different query or activate more sources.")
+                    st.warning(
+                        "No results found. Try **rephrasing your question** "
+                        "or activate more sources in the sidebar."
+                    )
 
                 if results:
                     max_similarity = max(
