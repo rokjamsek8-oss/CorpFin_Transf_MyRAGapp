@@ -323,6 +323,38 @@ def render_suggested_chips(location: str) -> None:
         )
 
 
+HISTORY_LIMIT = 5
+HISTORY_LABEL_MAX = 40
+
+
+def add_to_history(query: str) -> None:
+    """Prepend `query` to the session-only search history (dedup, cap at HISTORY_LIMIT)."""
+    if not query or not query.strip():
+        return
+    history = [q for q in st.session_state.get("query_history", []) if q != query]
+    history.insert(0, query)
+    st.session_state["query_history"] = history[:HISTORY_LIMIT]
+
+
+def render_history_strip() -> None:
+    """Render up to HISTORY_LIMIT recent-search buttons. Hidden when history is empty."""
+    history = st.session_state.get("query_history", [])
+    if not history:
+        return
+    st.caption("Recent")
+    cols = st.columns(min(len(history), HISTORY_LIMIT))
+    for i, q in enumerate(history[:HISTORY_LIMIT]):
+        label = q if len(q) <= HISTORY_LABEL_MAX else q[: HISTORY_LABEL_MAX - 1] + "…"
+        cols[i].button(
+            label,
+            key=f"hist_{i}",
+            on_click=use_suggested_query,
+            args=(q,),
+            use_container_width=True,
+            help=q,
+        )
+
+
 def render_empty_library_state() -> None:
     st.title("Knowledge base is empty")
     st.markdown(
@@ -501,6 +533,7 @@ elif page == "Search":
             if not st.session_state.get("search_query_input"):
                 st.caption("Try a suggestion:")
                 render_suggested_chips("search")
+            render_history_strip()
             query = st.text_input(
                 "Your question",
                 placeholder="e.g. What KPIs measure finance transformation success?",
@@ -509,6 +542,7 @@ elif page == "Search":
             num_results = st.slider("Number of results", 1, 10, 5)
 
             if query:
+                add_to_history(query)
                 where_filter = {"source": {"$in": active}} if len(active) < len(pdfs) else None
                 with st.spinner("Searching..."):
                     if where_filter:
