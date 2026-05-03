@@ -334,19 +334,19 @@ HISTORY_LIMIT = 5
 HISTORY_LABEL_MAX = 40
 
 
-def apply_subtopic_filter() -> None:
-    """Selectbox callback: tick papers in the chosen sub-topic, untick the rest."""
-    selected = st.session_state.get("subtopic_filter", "All sub-topics")
+def apply_filters() -> None:
+    """Recompute active_sources by AND-intersecting the sub-topic and journal filters."""
+    sub = st.session_state.get("subtopic_filter", "All sub-topics")
+    jrn = st.session_state.get("journal_filter", "All journals")
     current_pdfs = discover_pdfs()
-    if selected == "All sub-topics":
-        target = {p.name for p in current_pdfs}
-    else:
-        manifest = load_manifest()
-        target = {
-            paper["filename"]
-            for paper in manifest.get("papers", [])
-            if paper.get("subtopic") == selected
-        }
+    papers = load_manifest().get("papers", [])
+
+    target = {p.name for p in current_pdfs}
+    if sub != "All sub-topics":
+        target &= {p["filename"] for p in papers if p.get("subtopic") == sub}
+    if jrn != "All journals":
+        target &= {p["filename"] for p in papers if p.get("journal") == jrn}
+
     for p in current_pdfs:
         on = p.name in target
         st.session_state.active_sources[p.name] = on
@@ -445,12 +445,24 @@ if pdfs:
         for p in manifest.get("papers", [])
         if p.get("subtopic")
     })
+    journal_options = sorted({
+        p.get("journal", "")
+        for p in manifest.get("papers", [])
+        if p.get("journal")
+    })
     if subtopic_options:
         st.sidebar.selectbox(
             "Filter by sub-topic",
             ["All sub-topics", *subtopic_options],
             key="subtopic_filter",
-            on_change=apply_subtopic_filter,
+            on_change=apply_filters,
+        )
+    if journal_options:
+        st.sidebar.selectbox(
+            "Filter by journal",
+            ["All journals", *journal_options],
+            key="journal_filter",
+            on_change=apply_filters,
         )
 
     col_a, col_b = st.sidebar.columns(2)
@@ -458,10 +470,14 @@ if pdfs:
         for p in pdfs:
             st.session_state.active_sources[p.name] = True
             st.session_state[f"src_{p.name}"] = True
+        st.session_state["subtopic_filter"] = "All sub-topics"
+        st.session_state["journal_filter"] = "All journals"
     if col_b.button("None", use_container_width=True):
         for p in pdfs:
             st.session_state.active_sources[p.name] = False
             st.session_state[f"src_{p.name}"] = False
+        st.session_state["subtopic_filter"] = "All sub-topics"
+        st.session_state["journal_filter"] = "All journals"
 
     for p in pdfs:
         meta = paper_lookup.get(p.name)
