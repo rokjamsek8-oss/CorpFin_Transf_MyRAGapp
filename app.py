@@ -30,6 +30,14 @@ STATIC_URL_BASE = "app/static/library"
 CHUNK_SIZE = 300
 CHUNK_OVERLAP = 50
 
+SUGGESTED_QUERIES = [
+    "What KPIs measure finance transformation success?",
+    "How does RPA change the role of accountants?",
+    "What is the impact of digitalization on management control?",
+    "How do CFO traits influence digital transformation?",
+    "Which cybersecurity risks affect accounting information systems?",
+]
+
 PALETTE = {
     "navy": "#0B2545",
     "slate": "#1E3A5F",
@@ -121,6 +129,26 @@ h1, h2, h3 {{
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-top: 4px;
+}}
+
+/* Buttons — pill shape, gold hover (scoped so sidebar buttons stay legible) */
+.stButton > button {{
+    border-radius: 999px;
+    transition: all 0.15s ease;
+}}
+[data-testid="stMain"] .stButton > button {{
+    background: #FFFFFF;
+    color: {PALETTE['charcoal']};
+    border: 1px solid #E2E8F0;
+    font-size: 0.88rem;
+    padding: 6px 14px;
+    min-height: auto;
+    font-weight: 500;
+}}
+[data-testid="stMain"] .stButton > button:hover {{
+    border-color: {PALETTE['gold']};
+    background: #FEF7E6;
+    color: {PALETTE['charcoal']};
 }}
 </style>
 """
@@ -273,6 +301,28 @@ def pdf_url(filename: str, page: int) -> str:
     return f"./{STATIC_URL_BASE}/{filename}#page={page}"
 
 
+def use_suggested_query(query: str) -> None:
+    """Callback: populate the search box and switch to the Search page."""
+    st.session_state["search_query_input"] = query
+    st.session_state["page_nav"] = "Search"
+
+
+def render_suggested_chips(location: str) -> None:
+    """Render SUGGESTED_QUERIES as clickable buttons in equal-width columns.
+
+    `location` namespaces the widget keys so chips on Home and Search don't collide.
+    """
+    cols = st.columns(len(SUGGESTED_QUERIES))
+    for i, q in enumerate(SUGGESTED_QUERIES):
+        cols[i].button(
+            q,
+            key=f"sq_{location}_{i}",
+            on_click=use_suggested_query,
+            args=(q,),
+            use_container_width=True,
+        )
+
+
 def render_empty_library_state() -> None:
     st.title("Knowledge base is empty")
     st.markdown(
@@ -315,6 +365,7 @@ page = st.sidebar.radio(
     "Navigate",
     ["Home", "Search", "Statistics", "Library"],
     label_visibility="collapsed",
+    key="page_nav",
 )
 
 st.sidebar.markdown("---")
@@ -424,13 +475,8 @@ if page == "Home":
     )
 
     st.markdown("### Try a query")
-    st.markdown(
-        "- *What KPIs measure finance transformation success?*\n"
-        "- *How does RPA change the role of accountants?*\n"
-        "- *What is continuous auditing?*\n"
-        "- *How do machine learning forecasts compare to judgmental forecasts?*\n"
-        "- *Which cybersecurity risks affect accounting information systems?*"
-    )
+    st.caption("Click any suggestion to run it.")
+    render_suggested_chips("home")
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -452,9 +498,13 @@ elif page == "Search":
         if not active:
             st.warning("No sources are active. Tick at least one PDF in the sidebar.")
         else:
+            if not st.session_state.get("search_query_input"):
+                st.caption("Try a suggestion:")
+                render_suggested_chips("search")
             query = st.text_input(
                 "Your question",
                 placeholder="e.g. What KPIs measure finance transformation success?",
+                key="search_query_input",
             )
             num_results = st.slider("Number of results", 1, 10, 5)
 
