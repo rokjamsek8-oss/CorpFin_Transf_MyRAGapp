@@ -4,7 +4,8 @@ A semantic search engine over a curated library of **peer-reviewed academic pape
 digital transformation of the finance function. Built for CFOs, controllers, and transformation
 leads who want to query the literature in plain English.
 
-Built with **Streamlit**, **LangChain**, **ChromaDB**, and the `all-MiniLM-L6-v2` sentence-transformer.
+Built with **Streamlit**, **LangChain** (PDF loader + text splitter), the `all-MiniLM-L6-v2`
+sentence-transformer, and brute-force cosine similarity over an in-memory numpy matrix.
 No API keys required.
 
 ## Features
@@ -74,11 +75,13 @@ my-rag-app/
   separators `["\n\n", "\n", ". ", " ", ""]`. Chosen for sharp top-1 retrieval on
   150–500-word academic-paper paragraphs.
 - **Embeddings:** `all-MiniLM-L6-v2` (90 MB, 384-dim). Cached on first run.
-- **Vector store:** ChromaDB in-memory. The vector store rebuilds when the library signature
-  (filenames + sizes) changes — adding a PDF triggers exactly one re-index.
+- **Vector store:** brute-force cosine over a `(N, 384)` numpy matrix, built once and cached
+  via `@st.cache_resource`. With ~3800 chunks the search is single-digit-millisecond per query —
+  no need for an HNSW index. The store rebuilds when the library signature (filenames + sizes)
+  changes — adding a PDF triggers exactly one re-index.
 - **Render free-tier sizing:** 512 MB RAM. Tactics applied: `@st.cache_resource` for the model
-  and the index; deferred imports inside cached functions; single-thread tokenizers; in-memory
-  Chroma (no disk persistence).
+  and the index; deferred imports inside cached functions; single-thread tokenizers; numpy
+  in-memory store (no chromadb stack — saves ~120 MB at runtime).
 
 ## Deploy to Render
 
