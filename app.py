@@ -268,11 +268,26 @@ def apa7_citation(filename: str, lookup: dict[str, PaperMeta]) -> str:
 # Cached heavy resources
 # ──────────────────────────────────────────────────────────────────────
 
-@st.cache_resource(show_spinner="Loading embedding model (first run downloads ~90 MB)...")
+@st.cache_resource(show_spinner="Loading embedding model (first run downloads ~25 MB)...")
 def load_embedding_model():
-    from langchain_huggingface import HuggingFaceEmbeddings
+    """Returns an adapter exposing embed_documents / embed_query.
 
-    return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    Backed by fastembed (ONNX runtime, ~40 MB) instead of sentence-transformers
+    (PyTorch, ~250 MB) — fits Render free-tier 512 MB without dropping retrieval
+    quality. Uses the same MiniLM-L6-v2 model converted to ONNX.
+    """
+    from fastembed import TextEmbedding
+
+    model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+    class _FastEmbedAdapter:
+        def embed_documents(self, texts):
+            return [vec.tolist() for vec in model.embed(list(texts))]
+
+        def embed_query(self, text):
+            return next(iter(model.embed([text]))).tolist()
+
+    return _FastEmbedAdapter()
 
 
 @dataclass
