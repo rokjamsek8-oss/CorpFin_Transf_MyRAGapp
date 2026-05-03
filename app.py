@@ -3,7 +3,8 @@ Digital Transformation of the Finance Function — RAG Knowledge Base.
 
 Searches a curated library of peer-reviewed PDFs (loaded from static/library/)
 using semantic search over recursive-character chunks and sentence-transformer
-embeddings stored in ChromaDB. No API keys required.
+embeddings, with brute-force cosine similarity over an in-memory numpy matrix.
+No API keys required.
 
 Run locally:
     streamlit run app.py
@@ -274,14 +275,75 @@ def load_embedding_model():
     return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 
+@dataclass
+class _Doc:
+    page_content: str
+    metadata: dict
+
+
+class NumpyVectorStore:
+    """Brute-force in-memory cosine search.
+
+    Replaces ChromaDB to fit Render's 512 MB free-tier RAM cap (chromadb pulls
+    onnxruntime, opentelemetry, posthog, fastapi-related deps that cost ~120 MB
+    at runtime that we don't otherwise use). With a few thousand chunks, a
+    numpy `(N, D) @ (D,)` cosine search runs in single-digit milliseconds.
+    """
+
+    def __init__(self, texts, metadatas, vectors, embedder):
+        self.texts = texts
+        self.metadatas = metadatas
+        self.vectors = vectors
+        self.embedder = embedder
+
+    @classmethod
+    def from_texts(cls, texts, metadatas, embedding):
+        raw = np.asarray(embedding.embed_documents(texts), dtype=np.float32)
+        norms = np.linalg.norm(raw, axis=1, keepdims=True)
+        vectors = raw / np.maximum(norms, 1e-8)
+        return cls(texts, metadatas, vectors, embedding)
+
+    def similarity_search_with_score(self, query: str, k: int = 5, filter=None):
+        qv = np.asarray(self.embedder.embed_query(query), dtype=np.float32)
+        qv = qv / max(float(np.linalg.norm(qv)), 1e-8)
+        sims = self.vectors @ qv  # cosine similarity in [-1, 1]
+
+        if filter and "source" in filter and "$in" in filter["source"]:
+            allowed = set(filter["source"]["$in"])
+            mask = np.fromiter(
+                (m["source"] in allowed for m in self.metadatas),
+                dtype=bool,
+                count=len(self.metadatas),
+            )
+            sims = np.where(mask, sims, -1.0)
+
+        if k >= len(sims):
+            order = np.argsort(-sims)
+        else:
+            top = np.argpartition(-sims, k - 1)[:k]
+            order = top[np.argsort(-sims[top])]
+
+        results = []
+        for i in order[:k]:
+            i = int(i)
+            similarity = float(sims[i])
+            if similarity <= -1.0:
+                continue  # filtered out
+            distance = 1.0 - similarity
+            results.append((
+                _Doc(page_content=self.texts[i], metadata=self.metadatas[i]),
+                distance,
+            ))
+        return results
+
+
 @st.cache_resource(show_spinner="Indexing PDF library...")
 def build_vector_store(_signature: str):
-    """Loads every PDF, splits into chunks, embeds, returns Chroma + chunk dicts.
+    """Loads every PDF, splits into chunks, embeds, returns NumpyVectorStore + chunk dicts.
 
     Re-runs only when the library signature changes (PDF added/removed/replaced).
     """
     from langchain_community.document_loaders import PyPDFLoader
-    from langchain_community.vectorstores import Chroma
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     manifest = load_manifest()
@@ -328,11 +390,10 @@ def build_vector_store(_signature: str):
         return None, [], chunks_per_doc
 
     embeddings = load_embedding_model()
-    vector_store = Chroma.from_texts(
+    vector_store = NumpyVectorStore.from_texts(
         texts=texts,
         metadatas=metadatas,
         embedding=embeddings,
-        collection_name="finance_transformation",
     )
 
     chunk_records = [{"text": t, **m} for t, m in zip(texts, metadatas)]
@@ -344,7 +405,7 @@ def build_vector_store(_signature: str):
 # ──────────────────────────────────────────────────────────────────────
 
 def similarity_class(distance: float) -> tuple[str, float]:
-    """Convert Chroma distance → (css class, similarity-in-[0,1])."""
+    """Convert cosine distance → (css class, similarity-in-[0,1])."""
     similarity = max(0.0, 1.0 - float(distance))
     if similarity >= 0.65:
         return "score-high", similarity
@@ -466,7 +527,7 @@ st.sidebar.markdown(
     "<h2 style='margin-top:0'>Finance Transformation RAG</h2>",
     unsafe_allow_html=True,
 )
-st.sidebar.caption("Peer-reviewed knowledge base · ChromaDB + MiniLM-L6-v2")
+st.sidebar.caption("Peer-reviewed knowledge base · MiniLM-L6-v2 · numpy cosine")
 
 page = st.sidebar.radio(
     "Navigate",
@@ -617,7 +678,7 @@ if page == "Home":
         2. **Recursive chunking.** Each PDF is split with LangChain's `RecursiveCharacterTextSplitter` (paragraph →
            sentence → word → character separators) at `chunk_size=300`, `chunk_overlap=50`.
         3. **Embeddings.** Each chunk is encoded by the `all-MiniLM-L6-v2` sentence-transformer (384 dims).
-        4. **Vector search.** Queries are encoded with the same model and matched by cosine similarity in ChromaDB.
+        4. **Vector search.** Queries are encoded with the same model and matched by cosine similarity over an in-memory numpy matrix.
         5. **Source-anchored results.** Every result links to the originating PDF at the exact page.
         """
     )
