@@ -169,6 +169,27 @@ h1, h2, h3 {{
     margin: 6px 0 8px 0;
     font-family: 'JetBrains Mono', monospace;
 }}
+
+/* Accessibility: visible keyboard focus indicator */
+:focus-visible {{
+    outline: 2px solid {PALETTE['gold']};
+    outline-offset: 2px;
+    border-radius: 2px;
+}}
+
+/* Result-card links — clearer underline + hover for non-mouse users */
+.source-card a {{
+    color: {PALETTE['navy']};
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}}
+.source-card a:hover,
+.source-card a:focus {{
+    color: {PALETTE['slate']};
+    text-decoration-color: {PALETTE['gold']};
+    text-decoration-thickness: 2px;
+}}
 </style>
 """
 
