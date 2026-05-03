@@ -18,21 +18,6 @@
       "notes": "In-press version (unedited). Cite with 'in press' note. Nature/Springer OA."
     },
     {
-      "filename": "02_wu_2025_cfo_overseas.pdf",
-      "title": "Can CFOs' overseas experience contribute to corporate digital transformation: evidence from China",
-      "authors": "Wu, L.; Xu, C.; Qi, L.; Lam, J.; Chen, G.",
-      "year": 2025,
-      "journal": "Humanities and Social Sciences Communications",
-      "volume_issue_pages": "12(1): 1-16",
-      "doi": "10.1057/s41599-025-05232-w",
-      "subtopic": "CFO role evolution",
-      "peer_reviewed": true,
-      "open_access": true,
-      "license": "CC-BY",
-      "confidence": "HIGH",
-      "notes": "Empirical Chinese listed-firm study (upper-echelons theory)."
-    },
-    {
       "filename": "03_perdana_2023_rpa_prototyping.pdf",
       "title": "Prototyping and implementing Robotic Process Automation in accounting firms: Benefits, challenges and opportunities to audit automation",
       "authors": "Perdana, A.; Lee, W. E.; Kim, C. M.",
@@ -45,20 +30,6 @@
       "open_access": false,
       "confidence": "HIGH",
       "notes": "Tier-1 IJAIS (Elsevier). Field study of RPA prototyping in accounting firms."
-    },
-    {
-      "filename": "04_bavaresco_2023_ml_accounting.pdf",
-      "title": "Machine learning-based automation of accounting services: An exploratory case study",
-      "authors": "Bavaresco, R. S.; Nesi, L. C.; Barbosa, J. L. V. et al.",
-      "year": 2023,
-      "journal": "International Journal of Accounting Information Systems",
-      "volume_issue_pages": "49, 100618",
-      "doi": "10.1016/j.accinf.2023.100618",
-      "subtopic": "AI / ML in accounting",
-      "peer_reviewed": true,
-      "open_access": false,
-      "confidence": "HIGH",
-      "notes": "Tier-1 IJAIS. TAM-based field study of ML chatbot for repetitive accounting tasks."
     },
     {
       "filename": "05_bui_2023_cloud_accounting.pdf",
@@ -164,20 +135,6 @@
       "notes": "MDPI IJFS. Empirical MENA study on DT impact on AIS quality."
     },
     {
-      "filename": "12_devilliers_2025_digital_sustainability.pdf",
-      "title": "Digital technologies and sustainability accounting, reporting and assurance: framework and research opportunities",
-      "authors": "de Villiers, C.; Dimes, R.; Molinari, M.",
-      "year": 2025,
-      "journal": "Meditari Accountancy Research",
-      "volume_issue_pages": "TBD",
-      "doi": "10.1108/MEDAR-01-2025-2796",
-      "subtopic": "ESG reporting tech (framework)",
-      "peer_reviewed": true,
-      "open_access": false,
-      "confidence": "MEDIUM",
-      "notes": "Emerald Meditari. Verify volume/issue/pages on Emerald page when finalizing report citation."
-    },
-    {
       "filename": "13_hyk_2026_digital_sustainability_slr.pdf",
       "title": "The Digitalization of Corporate Sustainability Reporting: A Systematic Literature Review and Synthesis for Future Research",
       "authors": "Hyk, V.; Vysochan, Oleh; Vysochan, Olha",
@@ -191,36 +148,6 @@
       "license": "CC-BY",
       "confidence": "HIGH",
       "notes": "MDPI JRFM. SLR of 193 publications on digital sustainability reporting (XBRL, ESG digitization, CSRD)."
-    },
-    {
-      "filename": "14_petcu_2024_cloud_sustainability.pdf",
-      "title": "Integrating Digital Technologies in Sustainability Accounting and Reporting: Perceptions of Professional Cloud Computing Users",
-      "authors": "Petcu, M. A.; Sobolevschi-David, M.-I.; Stefan, et al.",
-      "year": 2024,
-      "journal": "Electronics",
-      "volume_issue_pages": "13(14), 2684",
-      "doi": "10.3390/electronics13142684",
-      "subtopic": "Cloud + sustainability reporting",
-      "peer_reviewed": true,
-      "open_access": true,
-      "license": "CC-BY",
-      "confidence": "HIGH",
-      "notes": "MDPI Electronics. Empirical EU survey on cloud + sustainability reporting integration."
-    },
-    {
-      "filename": "15_theodorakopoulos_2025_bigdata_risk.pdf",
-      "title": "Big data in financial risk management: evidence, advances, and open questions: a systematic review",
-      "authors": "Theodorakopoulos, L.; Theodoropoulou, A.; Bakalis, A.",
-      "year": 2025,
-      "journal": "Frontiers in Artificial Intelligence",
-      "volume_issue_pages": "8, 1658375",
-      "doi": "10.3389/frai.2025.1658375",
-      "subtopic": "Big data financial risk / cybersecurity proxy",
-      "peer_reviewed": true,
-      "open_access": true,
-      "license": "CC-BY",
-      "confidence": "HIGH",
-      "notes": "Frontiers in AI. SLR of 21 studies on neural nets, ensembles, hybrids in financial risk."
     }
   ],
   "open_slots": []
