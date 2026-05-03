@@ -38,7 +38,7 @@ SUGGESTED_QUERIES = [
     "Which cybersecurity risks affect accounting information systems?",
 ]
 
-OOS_SIMILARITY_THRESHOLD = 0.35
+OOS_SIMILARITY_THRESHOLD = 0.25
 OOS_NOTICE = (
     "**No strong matches in the corpus.** The library covers digital transformation "
     "of the finance function — try a related question, or check the **Library** page "
@@ -499,6 +499,12 @@ if pdfs:
         for p in manifest.get("papers", [])
         if p.get("journal")
     })
+    # Apply pending filter reset BEFORE the selectbox widgets render —
+    # mutating widget-keyed session state after instantiation raises StreamlitAPIException.
+    if st.session_state.pop("_reset_filters", False):
+        st.session_state["subtopic_filter"] = "All sub-topics"
+        st.session_state["journal_filter"] = "All journals"
+
     if subtopic_options:
         st.sidebar.selectbox(
             "Filter by sub-topic",
@@ -519,14 +525,14 @@ if pdfs:
         for p in pdfs:
             st.session_state.active_sources[p.name] = True
             st.session_state[f"src_{p.name}"] = True
-        st.session_state["subtopic_filter"] = "All sub-topics"
-        st.session_state["journal_filter"] = "All journals"
+        st.session_state["_reset_filters"] = True
+        st.rerun()
     if col_b.button("None", use_container_width=True):
         for p in pdfs:
             st.session_state.active_sources[p.name] = False
             st.session_state[f"src_{p.name}"] = False
-        st.session_state["subtopic_filter"] = "All sub-topics"
-        st.session_state["journal_filter"] = "All journals"
+        st.session_state["_reset_filters"] = True
+        st.rerun()
 
     n_active = sum(1 for v in st.session_state.active_sources.values() if v)
     st.sidebar.markdown(
